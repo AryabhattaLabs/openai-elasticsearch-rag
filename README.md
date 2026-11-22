@@ -132,8 +132,8 @@ curl --location --request POST 'localhost:8081/api/query' \
 }'
 ```
 
-#### Built by Ajeet with ☕️ and ❤️
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+#### Built by Ajeet with ☕️ and ❤️
