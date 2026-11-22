@@ -63,10 +63,13 @@ docker run -d --name es-rag -p 127.0.0.1:9200:9200 -m 2g \
 
 Before running app, create `.env` file using `.env-template` and add OpenAI API Key and Elasticsearch credentials.
 
-The app uses `gpt-5.4-mini` for answers and `text-embedding-ada-002` for embeddings. Model names change over
+The app uses `gpt-5.4-mini` for answers and `text-embedding-3-small` for embeddings. Model names change over
 time: to use others, set `OPENAI_CHAT_MODEL` and `OPENAI_EMBEDDING_MODEL` in `.env`. If you change the embedding
 model, recreate the index with that model's dimensions and retune `BEST_SCORE_THRESHOLD` in
 `app/services/answering_service.py`.
+
+If you indexed data with an earlier version of this app, which used `text-embedding-ada-002`, delete the index
+and index the data again. Embeddings from different models cannot be compared.
 
 ```bash
 python run.py
