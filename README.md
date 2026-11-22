@@ -1,5 +1,10 @@
 # Retrieval Augmented Generation (RAG) Application using OpenAI and ElasticSearch as Vector DB
 
+> **Status: a 2024 reference, not actively maintained.** It targets Elasticsearch 7.14 and the OpenAI Python
+> SDK 1.11, as pinned in `requirements.txt`. The code is small and readable and still works as a starting
+> point, but expect to update those versions. A follow-up for video, `youtube-timestamped-rag`, is planned
+> at [Aryabhatta Labs](https://github.com/AryabhattaLabs).
+
 RAG *(Retrieval-Augmented Generation)* Application to offer Q&A on a long format text using OpenAI and
 ElasticSearch. Here we are
 
@@ -126,5 +131,9 @@ curl --location --request POST 'localhost:8081/api/query' \
   "index_name": "first-index"
 }'
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
 
 #### Built by Ajeet with ☕️ and ❤️
