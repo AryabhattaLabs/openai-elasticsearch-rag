@@ -1,9 +1,8 @@
 # Retrieval Augmented Generation (RAG) Application using OpenAI and ElasticSearch as Vector DB
 
-> **Status: a 2024 reference, not actively maintained.** It targets Elasticsearch 7.14 and the OpenAI Python
-> SDK 1.11, as pinned in `requirements.txt`. The code is small and readable and still works as a starting
-> point, but expect to update those versions. A follow-up for video, `youtube-timestamped-rag`, is planned
-> at [Aryabhatta Labs](https://github.com/AryabhattaLabs).
+> **Status: a compact reference app.** First published in 2024 and refreshed in November 2026 for
+> Elasticsearch 9 and version 3 of the OpenAI Python SDK. A follow-up for video,
+> `youtube-timestamped-rag`, is planned at [Aryabhatta Labs](https://github.com/AryabhattaLabs).
 
 RAG *(Retrieval-Augmented Generation)* Application to offer Q&A on a long format text using OpenAI and
 ElasticSearch. Here we are
@@ -15,10 +14,10 @@ ElasticSearch. Here we are
 
 ### Prerequisites:
 
-1. Python 3.9 or above
+1. Python 3.10 or above
 2. pip
 3. virtualenv
-4. elasticsearch - 7.14.0 (https://www.elastic.co/downloads/elasticsearch)
+4. Elasticsearch 9.x (the steps below run it in Docker)
 5. OpenAI API Key (https://platform.openai.com/)
 
 ### Installation Steps:
@@ -45,14 +44,29 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 ```
 
-- Elasticsearch Setup (https://www.elastic.co/downloads/elasticsearch)
-    1. Download and unzip Elasticsearch
-    2. Start Elasticsearch `bin/elasticsearch` (or `bin\elasticsearch.bat` on Windows)
-    3. Test it by running `curl -X GET "localhost:9200/"` in terminal
+- Elasticsearch Setup. The simplest way to run it locally is Docker. This starts a single node on
+  `localhost:9200` with the user `elastic` and the password `password`, which match `.env-template`.
+  It is for local use only.
+
+```bash
+docker run -d --name es-rag -p 127.0.0.1:9200:9200 -m 2g \
+  -e discovery.type=single-node \
+  -e ELASTIC_PASSWORD=password \
+  -e xpack.security.http.ssl.enabled=false \
+  docker.elastic.co/elasticsearch/elasticsearch:9.5.6
+```
+
+  Test it by running `curl -u elastic:password "localhost:9200/"` in terminal. If you install Elasticsearch
+  another way (https://www.elastic.co/downloads/elasticsearch), put its URL, user and password in `.env`.
 
 ### Run App
 
 Before running app, create `.env` file using `.env-template` and add OpenAI API Key and Elasticsearch credentials.
+
+The app uses `gpt-5.4-mini` for answers and `text-embedding-ada-002` for embeddings. Model names change over
+time: to use others, set `OPENAI_CHAT_MODEL` and `OPENAI_EMBEDDING_MODEL` in `.env`. If you change the embedding
+model, recreate the index with that model's dimensions and retune `BEST_SCORE_THRESHOLD` in
+`app/services/answering_service.py`.
 
 ```bash
 python run.py
@@ -69,7 +83,7 @@ curl -X GET "localhost:8081"
 ### 1. Create ES Index
 
 ```bash
-curl --location --request PUT 'http://localhost:9200/first-index' \
+curl -u elastic:password --location --request PUT 'http://localhost:9200/first-index' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "mappings": {
@@ -89,21 +103,30 @@ curl --location --request PUT 'http://localhost:9200/first-index' \
 If you want to delete the index for clean start, use the following command.
 
 ```bash
-curl --location --request DELETE 'http://localhost:9200/first-index'
+curl -u elastic:password --location --request DELETE 'http://localhost:9200/first-index'
 ```
 
 ### 2. Index Data
 
-To index data, use the following `curl` command. This command sends a POST request to the specified endpoint with a JSON
-payload containing the text to be indexed and the name of the index.
+The repository includes a sample text to try: the Universal Declaration of Human Rights, in
+`sample_data/universal_declaration_of_human_rights.txt`. Make sure you have the server running on `localhost`
+on port `8081`, then index the file:
 
-Make sure you have the server running on `localhost` on port `8081`.
+```bash
+python index_file.py sample_data/universal_declaration_of_human_rights.txt first-index
+```
+
+The script reads the file and sends it to the app's `/api/index` endpoint. The app splits the text into
+sentences, creates an embedding for each one and stores it in Elasticsearch. A sentence that is already
+indexed is skipped, so you can run it again safely.
+
+To index your own text, pass any UTF-8 text file to the script, or send the text directly:
 
 ```bash
 curl --location --request POST 'localhost:8081/api/index' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "text": "Ajeet is an engineer turned product entrepreneur with experience in AI, SaaS, HealthTech and EdTech. He is a technology enthusiast and loves to work on new technologies. He was a founding member of leading health-tech startups HealthKart and TATA 1mg in India. He was the founder of Joe Hukum, a chatbot platform which was acquired by Freshworks. After Freshworks, he founded Seekho.ai to solve for the skill gap in Indian higher education. Currently, he is on a break and is exploring GenAI to solve for the next meaningful problem. He is passionate about solving zero to one problems and building products that can impact millions of lives.",
+  "text": "Your text goes here. It can be as long as you like.",
   "index_name": "first-index"
 }'
 ```
@@ -116,7 +139,7 @@ Example 1:
 curl --location --request POST 'localhost:8081/api/query' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "question": "Who is Ajeet?",
+  "question": "Is elementary education free and compulsory?",
   "index_name": "first-index"
 }'
 ```
@@ -127,10 +150,16 @@ Example 2:
 curl --location --request POST 'localhost:8081/api/query' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "question": "Joe Hukum was acquired by which company?",
+  "question": "Can someone be stopped from changing their nationality?",
   "index_name": "first-index"
 }'
 ```
+
+## Sample data
+
+`sample_data/universal_declaration_of_human_rights.txt` is the English text of the Universal Declaration of
+Human Rights, adopted by the United Nations General Assembly on 10 December 1948 as resolution 217 A (III).
+The text is taken from https://www.un.org/en/about-us/universal-declaration-of-human-rights.
 
 ## License
 
