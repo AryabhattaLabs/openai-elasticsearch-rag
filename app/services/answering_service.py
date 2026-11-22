@@ -32,7 +32,8 @@ def generate_answer(query, index=None, pre_msgs=None):
                 if score >= BEST_SCORE_THRESHOLD and len(text) > 30 and i < 5:  # Close match found
                     matched_texts += text + "\n"
                     i += 1
-            best_score = res['hits']['hits'][0]['_score']
+            hits = res['hits']['hits']
+            best_score = hits[0]['_score'] if hits else 0
         else:
             print('No close match found')
     else:
