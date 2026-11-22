@@ -9,7 +9,10 @@ If no close match is found, the function constructs a response message based on 
 
 from app.services.core import es_service, openai_service
 
-BEST_SCORE_THRESHOLD = 1.71  # Threshold for considering a match as close; Adjust as needed
+# Threshold for considering a match as close. The score is cosine similarity + 1.0, so it runs from 0 to 2.
+# 1.48 is tuned for text-embedding-3-small on the sample text: questions the text answers scored 1.54 or more,
+# and unrelated questions scored 1.42 or less. Retune it for your own data or another embedding model.
+BEST_SCORE_THRESHOLD = 1.48
 
 
 def generate_answer(query, index=None, pre_msgs=None):
