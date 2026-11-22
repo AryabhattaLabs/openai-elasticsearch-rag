@@ -14,7 +14,7 @@ client = OpenAI()
 # )
 # Model names change over time. Set OPENAI_CHAT_MODEL or OPENAI_EMBEDDING_MODEL in .env to use others.
 # If you change the embedding model, recreate the index (dims) and retune BEST_SCORE_THRESHOLD.
-gpt_model = os.environ.get("OPENAI_CHAT_MODEL") or "gpt-5.4-mini"
+gpt_model = os.environ.get("OPENAI_CHAT_MODEL") or "gpt-6-luna"
 embedding_model = os.environ.get("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small"
 
 
